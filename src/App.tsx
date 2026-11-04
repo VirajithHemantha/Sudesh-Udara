@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, MapPin, Calendar, Clock, ChevronDown } from "lucide-react";
-import { INVITATION, getGuestNameFromUrl } from "./invitation";
+import { INVITATION, RSVP_SCRIPT_URL, getGuestNameFromUrl } from "./invitation";
 
 
 const backgroundMusic = "/handawaka-various-artists.mp3";
-const googleScriptUrl =
-  "https://script.google.com/macros/s/AKfycbx6tVTRxM0Fjc10fR0a35PjSjb9JJN-9F7zDpxyJvVMhdZ3A-_rOkAV8x8Cwpeqfp5NLw/exec";
 
 const publicImagePath = (fileName: string) => `/images/${fileName.replaceAll(" ", "%20")}`;
 const preImagePath = (fileName: string) => `/pre/${fileName.replaceAll(" ", "%20")}`;
@@ -241,27 +239,33 @@ export default function WeddingInvitation() {
   const guestName = getGuestNameFromUrl();
 
   const [rsvpForm, setRsvpForm] = useState({
-    name: "",
+    name: guestName ?? "",
     guests: "1",
   });
 
   const [rsvpStatus, setRsvpStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [rsvpError, setRsvpError] = useState("");
 
   const audioRef = React.useRef<HTMLAudioElement>(null);
   const introVideoRef = React.useRef<HTMLVideoElement>(null);
 
   const submitToGoogleSheet = async (payload: Record<string, string>) => {
-    if (!googleScriptUrl) {
-      throw new Error("Google Script URL tl ilid ke;");
+    if (!RSVP_SCRIPT_URL || RSVP_SCRIPT_URL.includes("PASTE_")) {
+      throw new Error("RSVP_SCRIPT_URL is not set in src/invitation.ts");
     }
 
-    const response = await fetch(googleScriptUrl, {
+    const response = await fetch(RSVP_SCRIPT_URL, {
       method: "POST",
       body: new URLSearchParams(payload),
     });
 
     if (!response.ok) {
-      throw new Error("b,a,Su id¾:l fkdùh");
+      throw new Error(`RSVP request failed (${response.status})`);
+    }
+
+    const result = await response.json().catch(() => null);
+    if (!result?.ok) {
+      throw new Error(result?.message || "RSVP not saved");
     }
   };
 
@@ -269,6 +273,7 @@ export default function WeddingInvitation() {
     e.preventDefault();
 
     if (!rsvpForm.name.trim()) {
+      setRsvpError("කරුණාකර ඔබගේ නම ඇතුළත් කරන්න.");
       setRsvpStatus("error");
       return;
     }
@@ -276,16 +281,21 @@ export default function WeddingInvitation() {
     setRsvpStatus("sending");
 
     try {
+      const attending = rsvpForm.guests !== "0";
       await submitToGoogleSheet({
         action: "rsvp",
         name: rsvpForm.name.trim(),
-        guests: rsvpForm.guests,
-        dietaryNotes: "",
+        attending: attending ? "yes" : "no",
+        guests: attending ? "1" : "0",
+        invitedAs: guestName ?? "",
+        link: window.location.href,
       });
 
       setRsvpStatus("success");
-      setRsvpForm({ name: "", guests: "1" });
-    } catch {
+      setRsvpForm({ name: guestName ?? "", guests: "1" });
+    } catch (err) {
+      console.error("RSVP failed:", err);
+      setRsvpError("ප්‍රතිචාරය යැවීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.");
       setRsvpStatus("error");
     }
   };
@@ -886,7 +896,7 @@ export default function WeddingInvitation() {
                         >
                           {rsvpStatus === "success"
                             ? "ඔබගේ පැමිණීම තහවුරු කිරීම සාර්ථකව යවා ඇත."
-                            : "කරුණාකර ඔබගේ නම ඇතුළත් කර නැවත උත්සාහ කරන්න."}
+                            : rsvpError}
                         </p>
                       )}
 

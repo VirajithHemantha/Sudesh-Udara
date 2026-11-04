@@ -138,3 +138,12 @@ ${link}
 
 ආදරයෙන්, 🤎🌻
 ${COUPLE_NAMES} 💍✨`;
+
+/* ---------- RSVP → Google Sheet ---------- */
+
+/**
+ * Apps Script Web App URL for the RSVP sheet (see code.gs).
+ * Deploy code.gs as a Web App, then paste its ".../exec" URL here.
+ */
+export const RSVP_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbx_9kkprtqeXatoyHnuV0aTpeAzhQLmgwPoSjuFxVLhiN2EpOOUM9X_EUZg69VQCTE-Jw/exec";
