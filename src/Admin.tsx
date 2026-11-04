@@ -1,198 +1,190 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  GUEST_PREFIXES,
+  SINHALA_GUEST_SUFFIXES,
+  NO_PREFIX,
+  type GuestPrefix,
+  COUPLE_NAMES,
+  buildGuestLink,
+  buildInvitationMessage,
+  formatDisplayName,
+} from './invitation';
 
-interface GeneratedLink {
-  id: string;
-  prefix: string;
-  guestName: string;
-  url: string;
-  createdAt: string;
+interface Generated {
+  displayName: string;
+  link: string;
+  message: string;
 }
 
 export default function Admin() {
-  const [prefix, setPrefix] = useState('Mr. & Mrs.');
+  const [prefix, setPrefix] = useState<GuestPrefix>('Mr.');
   const [guestName, setGuestName] = useState('');
-  const [links, setLinks] = useState<GeneratedLink[]>([]);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [generated, setGenerated] = useState<Generated | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<number | undefined>(undefined);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('generatedLinks');
-    if (saved) {
-      setLinks(JSON.parse(saved));
-    }
-  }, []);
+  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
-  const prefixes = [
-    'Mr. & Mrs.',
-    'Mr.',
-    'Mrs.',
-    'Ms.',
-    'Miss',
-    'Dr. & Mrs.',
-    'Dr.',
-    'Prof.',
-    'Rev.',
-    'To'
-  ];
+  // Editing the inputs invalidates the last link, so it can't be copied stale.
+  const updatePrefix = (value: GuestPrefix) => {
+    setPrefix(value);
+    setGenerated(null);
+  };
+  const updateGuestName = (value: string) => {
+    setGuestName(value);
+    setGenerated(null);
+  };
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!guestName.trim()) return;
-
-    const fullName = `${prefix} ${guestName.trim()}`;
-    const baseUrl = window.location.origin;
-    const url = `${baseUrl}/?to=${encodeURIComponent(fullName)}`;
-    
-    const newLink: GeneratedLink = {
-      id: crypto.randomUUID(),
-      prefix,
-      guestName: guestName.trim(),
-      url,
-      createdAt: new Date().toLocaleString('en-GB', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
-    };
-
-    const newLinks = [newLink, ...links];
-    setLinks(newLinks);
-    localStorage.setItem('generatedLinks', JSON.stringify(newLinks));
-    setGuestName('');
+    const displayName = formatDisplayName(prefix, guestName);
+    if (!displayName) return;
+    const link = buildGuestLink(window.location.origin, prefix, guestName);
+    setGenerated({ displayName, link, message: buildInvitationMessage(displayName, link) });
   };
 
-  const handleCopy = async (link: GeneratedLink) => {
+  const showToast = (text: string) => {
+    setToast(text);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2000);
+  };
+
+  const copy = async (text: string, successText: string) => {
     try {
-      await navigator.clipboard.writeText(link.url);
-      setCopiedId(link.id);
-      setTimeout(() => setCopiedId(null), 2000);
+      await navigator.clipboard.writeText(text);
+      showToast(successText);
     } catch (err) {
       console.error('Failed to copy', err);
+      showToast('පිටපත් කිරීම අසාර්ථකයි');
     }
   };
 
-  const handleDelete = (id: string) => {
-    const newLinks = links.filter(l => l.id !== id);
-    setLinks(newLinks);
-    localStorage.setItem('generatedLinks', JSON.stringify(newLinks));
-  };
+  const previewName = formatDisplayName(prefix, guestName);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 font-sans">
-      <div className="max-w-3xl mx-auto space-y-8">
-        
-        {/* Generator Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-          <h1 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
-            LINK GENERATOR
-          </h1>
+    // body has overflow: hidden (the invitation scrolls its own container), so this page does too.
+    <div className="h-[100dvh] overflow-y-auto bg-[#f5ecd9] py-10 md:py-14 px-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <header className="text-center space-y-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#5c3a1e]">ආරාධනා සබැඳි සාදන්න</h1>
+          <p className="text-base text-[#7a5c1e]">
+            {COUPLE_NAMES} · Invitation Link Generator
+          </p>
+        </header>
 
-          <form onSubmit={handleGenerate} className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-600">Select Prefix</label>
-                <select
-                  value={prefix}
-                  onChange={(e) => setPrefix(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none"
-                >
-                  {prefixes.map(p => (
+        <form
+          onSubmit={handleGenerate}
+          className="bg-white rounded-2xl border border-[#a8832f]/30 shadow-[0_20px_50px_-25px_rgba(90,66,20,0.35)] p-6 md:p-8 space-y-5"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="space-y-2">
+              <label htmlFor="prefix" className="text-sm font-bold text-[#5c3a1e]">Select Prefix</label>
+              <select
+                id="prefix"
+                value={prefix}
+                onChange={(e) => updatePrefix(e.target.value as GuestPrefix)}
+                className="w-full bg-[#fbf6ec] border border-[#a8832f]/30 rounded-xl px-4 py-3 text-[#1a1a1a] focus:outline-none focus:ring-2 focus:ring-[#a8832f]/30 focus:border-[#a8832f]"
+              >
+                <option value={NO_PREFIX}>{NO_PREFIX} (නම පමණයි)</option>
+                <optgroup label="English (නමට පෙර)">
+                  {GUEST_PREFIXES.map((p) => (
                     <option key={p} value={p}>{p}</option>
                   ))}
-                </select>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-semibold text-slate-600">Guest Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. John Doe"
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400"
-                  required
-                />
-              </div>
+                </optgroup>
+                <optgroup label="සිංහල (නමට පසු)">
+                  {SINHALA_GUEST_SUFFIXES.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </optgroup>
+              </select>
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 rounded-xl transition-colors shadow-sm active:scale-[0.99] flex justify-center items-center gap-2"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Generate Link
-            </button>
-          </form>
-        </div>
-
-        {/* Generated Links List */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            Recently Generated Links
-          </h2>
-
-          {links.length === 0 ? (
-            <div className="text-center py-10 text-slate-400 text-sm">
-              No links generated yet.
+            <div className="space-y-2 md:col-span-2">
+              <label htmlFor="guestName" className="text-sm font-bold text-[#5c3a1e]">Guest Name</label>
+              <input
+                id="guestName"
+                type="text"
+                placeholder="e.g. Sanjaya"
+                value={guestName}
+                onChange={(e) => updateGuestName(e.target.value)}
+                className="w-full bg-[#fbf6ec] border border-[#a8832f]/30 rounded-xl px-4 py-3 text-[#1a1a1a] placeholder:text-[#a8832f]/60 focus:outline-none focus:ring-2 focus:ring-[#a8832f]/30 focus:border-[#a8832f]"
+                required
+              />
             </div>
-          ) : (
-            <div className="space-y-4">
-              {links.map((link) => (
-                <div key={link.id} className="group flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:border-slate-200 transition-colors gap-4">
-                  <div className="min-w-0">
-                    <p className="font-medium text-slate-800 truncate">
-                      {link.prefix} {link.guestName}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {link.createdAt.replace(',', '')}
-                    </p>
-                  </div>
+          </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => handleCopy(link)}
-                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition-colors"
-                    >
-                      {copiedId === link.id ? (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                          Copy
-                        </>
-                      )}
-                    </button>
-                    
-                    <button
-                      onClick={() => handleDelete(link.id)}
-                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete link"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
+          {previewName && (
+            <p className="text-base text-[#333333]">
+              ආරාධනාව: <span className="font-bold text-[#5c3a1e]">ආදරණීය {previewName} 🤎</span>
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={!previewName}
+            className="w-full bg-[#7a5c1e] hover:bg-[#5a4214] text-white font-bold py-3.5 rounded-xl transition-colors shadow-sm active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Generate Link
+          </button>
+        </form>
+
+        <section className="bg-white rounded-2xl border border-[#a8832f]/30 shadow-[0_20px_50px_-25px_rgba(90,66,20,0.35)] p-6 md:p-8 space-y-5">
+          <div className="space-y-2">
+            <div className="text-sm font-bold text-[#5c3a1e]">Generated Link</div>
+            {generated ? (
+              <a
+                href={generated.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block break-all rounded-xl bg-[#fbf6ec] border border-[#a8832f]/30 px-4 py-3 text-[#7a5c1e] font-bold hover:underline"
+              >
+                {generated.link}
+              </a>
+            ) : (
+              <p className="rounded-xl bg-[#fbf6ec] border border-dashed border-[#a8832f]/40 px-4 py-3 text-[#444444]">
+                Generate Link ඔබන්න.
+              </p>
+            )}
+          </div>
+
+          {generated && (
+            <div className="space-y-2">
+              <div className="text-sm font-bold text-[#5c3a1e]">පණිවිඩයේ පෙරදසුන</div>
+              <pre className="whitespace-pre-wrap break-words rounded-xl bg-[#fbf6ec] border border-[#a8832f]/30 px-4 py-4 text-base leading-relaxed text-[#1a1a1a] font-[inherit]">
+                {generated.message}
+              </pre>
             </div>
           )}
-        </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              disabled={!generated}
+              onClick={() => generated && copy(generated.link, 'Link copied!')}
+              className="py-3 rounded-xl border border-[#a8832f]/50 text-[#5c3a1e] font-bold hover:bg-[#fbf6ec] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Copy Link Only
+            </button>
+            <button
+              type="button"
+              disabled={!generated}
+              onClick={() => generated && copy(generated.message, 'Message copied!')}
+              className="py-3 rounded-xl bg-[#a8832f] hover:bg-[#7a5c1e] text-white font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Copy Full Message
+            </button>
+          </div>
+        </section>
       </div>
+
+      {toast && (
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-full bg-[#5c3a1e] text-[#f5ecd9] px-5 py-2.5 text-sm font-bold shadow-lg"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

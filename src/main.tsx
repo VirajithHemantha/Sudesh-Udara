@@ -8,6 +8,6 @@ const path = window.location.pathname;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {path === '/admin' ? <Admin /> : <App />}
+    {path.replace(/\/+$/, '') === '/admin' ? <Admin /> : <App />}
   </StrictMode>,
 );

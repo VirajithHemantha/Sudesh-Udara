@@ -1,36 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, MapPin, Calendar, Clock, ChevronDown } from "lucide-react";
+import { INVITATION, getGuestNameFromUrl } from "./invitation";
 
-const INVITATION = {
-  couple: {
-    bride: "මලීෂා",
-    groom: "කවිඳු",
-    brideFull: "මලීෂා කුමාරප්පෙරුම",
-    groomFull: "කවිඳු ශාවින්ද",
-  },
-  date: {
-    displayNumeric: "23 . 07 . 2026",
-    displayLong: "වර්ෂ 2026 ක් වූ ජූලි මස 23 වන දින",
-    countdownTarget: "2026-07-23T10:10:00+05:30",
-  },
-  time: {
-    ceremonyStart: "පෙ.ව. 10:10",
-    ceremonyEnd: "ප.ව. 3:30",
-    registration: "පෙ.ව. 10:45",
-    welcome: "පෙ.ව. 9:30",
-  },
-  venue: {
-    name: "Grandeeza Hotel",
-    city: "Negombo",
-    mapQuery: "Grandeeza Hotel, Negombo",
-    googleMapsLink: "https://maps.app.goo.gl/oFXbL74vBvHcvBX69",
-  },
-  rsvpContacts: [
-    "Maleesha - +94 71 969 2123",
-    "Kavindu - +94 76 340 1507",
-  ],
-} as const;
 
 const backgroundMusic = "/handawaka-various-artists.mp3";
 const googleScriptUrl =
@@ -214,7 +186,7 @@ function Gallery() {
         >
           <div className="flex flex-col items-center gap-4">
             <span className="text-[#1b4332] font-bold tracking-[0.8em] text-sm md:text-base opacity-40 uppercase">
-              Captured Moments
+              අපගේ මතක සටහන්
             </span>
             <div className="h-px w-16 bg-[#52b788]/30" />
           </div>
@@ -266,8 +238,7 @@ export default function WeddingInvitation() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasAttemptedAutoplay, setHasAttemptedAutoplay] = useState(false);
 
-  const searchParams = new URLSearchParams(window.location.search);
-  const guestName = searchParams.get("to");
+  const guestName = getGuestNameFromUrl();
 
   const [rsvpForm, setRsvpForm] = useState({
     name: "",
@@ -414,7 +385,7 @@ export default function WeddingInvitation() {
                       විවාහ ආරාධනයයි
                     </h2>
                     <p className="text-xl md:text-2xl text-[#2d5a27] tracking-[0.3em] drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)]">
-                      {INVITATION.couple.bride} සහ {INVITATION.couple.groom}
+                      {INVITATION.couple.first} සහ {INVITATION.couple.second}
                     </p>
                   </motion.div>
 
@@ -477,7 +448,7 @@ export default function WeddingInvitation() {
                       transition={{ duration: 2, delay: 1.2 }}
                       className="text-3xl md:text-6xl text-[#2d5a27] tracking-[0.3em] font-bold drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)] self-start"
                     >
-                      {INVITATION.couple.bride}
+                      {INVITATION.couple.first}
                     </motion.p>
 
                     <motion.span
@@ -495,7 +466,7 @@ export default function WeddingInvitation() {
                       transition={{ duration: 2, delay: 1.8 }}
                       className="text-3xl md:text-6xl text-[#2d5a27] tracking-[0.4em] font-bold drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)] self-end"
                     >
-                      {INVITATION.couple.groom}
+                      {INVITATION.couple.second}
                     </motion.p>
                   </div>
                 </motion.div>
@@ -537,16 +508,6 @@ export default function WeddingInvitation() {
               />
 
               <div className="relative z-10 w-full max-w-5xl px-6 text-center mt-12 md:mt-0">
-                {guestName && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-lg md:text-xl font-bold text-[#2d5a27] mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
-                  >
-                    {guestName}
-                  </motion.p>
-                )}
-
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -554,7 +515,7 @@ export default function WeddingInvitation() {
                   className="mt-10"
                 >
                   <h1 className="text-6xl sm:text-7xl md:text-8xl text-[#2d5a27] italic leading-none drop-shadow-[0_0_15px_rgba(255,255,255,0.9)]">
-                    {INVITATION.couple.bride}
+                    {INVITATION.couple.first}
                   </h1>
 
                   <div className="mt-6 flex items-center justify-center gap-5">
@@ -564,7 +525,7 @@ export default function WeddingInvitation() {
                   </div>
 
                   <h1 className="mt-6 text-6xl sm:text-7xl md:text-8xl text-[#2d5a27] italic leading-none drop-shadow-[0_0_15px_rgba(255,255,255,0.9)]">
-                    {INVITATION.couple.groom}
+                    {INVITATION.couple.second}
                   </h1>
                 </motion.div>
 
@@ -596,6 +557,42 @@ export default function WeddingInvitation() {
               </motion.div>
             </section>
 
+            <section className="relative w-full py-16 md:py-28 px-6 flex flex-col items-center text-center bg-transparent">
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1 }}
+                className="max-w-2xl mx-auto flex flex-col items-center space-y-6"
+              >
+                <div className="flex items-center gap-4 opacity-50">
+                  <div className="h-px w-10 bg-[#2d5a27]" />
+                  <Sparkles className="w-4 h-4 text-[#3f7a39]" />
+                  <div className="h-px w-10 bg-[#2d5a27]" />
+                </div>
+
+                <p className="text-xl md:text-2xl text-[#2d5a27]/80 tracking-[0.3em] font-bold">
+                  ආදරණීය
+                </p>
+
+                {guestName && (
+                  <h2 className="text-4xl md:text-6xl text-[#2d5a27] font-bold italic leading-tight">
+                    {guestName}
+                  </h2>
+                )}
+
+                <p className="text-base md:text-lg text-slate-700 leading-loose">
+                  අපගේ ජීවිතයේ සුන්දරතම දිනය අප සමඟ සමරන්නට, ඔබට සෙනෙහසින් ආරාධනා කරමු.
+                </p>
+
+                <div className="h-px w-24 bg-[#2d5a27]/25" />
+
+                <p className="text-lg md:text-xl text-[#3f7a39] font-bold tracking-wide">
+                  ඔබගේ පැමිණීම අපට මහත් සතුටකි
+                </p>
+              </motion.div>
+            </section>
+
             <section
               id="details"
               className="relative pt-8 md:pt-20 pb-12 md:pb-32 w-full flex flex-col items-center overflow-hidden"
@@ -624,21 +621,33 @@ export default function WeddingInvitation() {
 
                   <div className="text-[#2d5a27] space-y-6 max-w-3xl mx-auto leading-relaxed text-base md:text-lg">
                     <p className="text-slate-700">
-                      කුමාරප්පෙරුම මහතාගේ සහ එම මහත්මියගේ ආදරණීය දියණිය වන
+                      {INVITATION.parents[0]} මහතාගේ සහ මැතිණියගේ ආදරණීය දියණිය
                     </p>
                     <h3 className="text-3xl md:text-4xl font-bold text-[#3f7a39] my-2">
-                      මලීෂා කුමාරප්පෙරුම
+                      {INVITATION.couple.second}
                     </h3>
 
                     <p className="text-slate-700">
-                      හේවාගජමගේ මහතාගේ සහ එම මහත්මියගේ ආදරණීය පුත් වන
+                      {INVITATION.parents[1]} මහතාගේ සහ මැතිණියගේ ආදරණීය පුතණුවන්
                     </p>
                     <h3 className="text-3xl md:text-4xl font-bold text-[#3f7a39] my-2">
-                      කවිඳු ශාවින්ද
+                      {INVITATION.couple.first}
                     </h3>
 
                     <p className="text-slate-700 max-w-2xl mx-auto pt-2">
-                      සමඟ අතිනත ගන්නා සොඳුරු මොහොත, ඔබගේ ආශීර්වාදයෙන් වර්ණවත් කර ගැනීමට සෙනෙහසින් ඇරයුම් කරන්නෙමු.
+                      සමග අතිනත ගැනීමේ ප්‍රීතිය නිමිත්තෙන්
+                      <br />
+                      වර්ෂ 2026 ක් වූ දෙසැම්බර් මස 07 වන දින පෙ.ව 9.00 සිට ප.ව 4.00 දක්වා
+                      <br />
+                      {INVITATION.venue.nameSi} හිදී පැවැත්වෙන ප්‍රිය සම්භාෂණයට සහභාගි වන මෙන්
+                    </p>
+
+                    <p className="text-slate-700 font-bold">
+                      {guestName ? `${guestName} ` : ""}ඔබට ගෞරවයෙන් ආරාධනා කරමු.
+                    </p>
+
+                    <p className="text-slate-600 text-sm md:text-base">
+                      (පෝරුව චාරිත්‍රය පෙ.ව 10.13ට)
                     </p>
 
 
@@ -692,7 +701,10 @@ export default function WeddingInvitation() {
                             වේලාව
                           </div>
                           <div className="text-base md:text-lg text-[#2d5a27] tracking-wide font-bold">
-                            පෝරුව චාරිත්‍ර {INVITATION.time.ceremonyStart}ට
+                            {INVITATION.time.event}
+                          </div>
+                          <div className="text-base md:text-lg text-[#2d5a27] tracking-wide font-bold mt-2">
+                            {INVITATION.time.poruwa}
                           </div>
                         </div>
                       </div>
@@ -706,7 +718,7 @@ export default function WeddingInvitation() {
                             ස්ථානය
                           </div>
                           <div className="text-base md:text-lg text-[#2d5a27] tracking-wide font-bold">
-                            {INVITATION.venue.name}, {INVITATION.venue.city}
+                            {INVITATION.venue.nameSi}
                           </div>
                           <a
                             href={INVITATION.venue.googleMapsLink}
@@ -714,7 +726,7 @@ export default function WeddingInvitation() {
                             rel="noopener noreferrer"
                             className="mt-2 inline-flex text-[10px] md:text-xs text-[#3f7a39] hover:text-[#1b4332] font-bold tracking-widest uppercase border-b border-[#3f7a39]/30 hover:border-[#1b4332] transition-colors pb-0.5"
                           >
-                            View on Google Maps
+                            සිතියමෙන් බලන්න
                           </a>
                         </div>
                       </div>
@@ -927,21 +939,34 @@ export default function WeddingInvitation() {
                     සෙනෙහසින් ලියැවෙන අපගේ ජීවිත කතාවේ සුන්දරතම දිනය, ඔබගේ පැමිණීමෙන් තවත් අර්ථවත් වනු ඇතැයි අප විශ්වාස කරමු
                   </p>
 
-                  <div className="pt-6 flex flex-col items-center gap-4 text-center w-full max-w-xl mx-auto">
-                    <div className="h-px w-24 bg-[#2d5a27]/20" />
-                    <p className="text-slate-500 text-xs tracking-[0.4em] font-bold mt-2">
-                      සම්බන්ධතා
-                    </p>
+                  {INVITATION.rsvpContacts.length > 0 && (
+                    <div className="pt-6 flex flex-col items-center gap-4 text-center w-full max-w-xl mx-auto">
+                      <div className="h-px w-24 bg-[#2d5a27]/20" />
+                      <p className="text-slate-500 text-xs tracking-[0.4em] font-bold mt-2">
+                        සම්බන්ධතා
+                      </p>
 
-                    <div className="flex flex-wrap justify-center gap-x-10 gap-y-2 text-[#2d5a27]/70 text-base tracking-widest font-normal">
-                      {INVITATION.rsvpContacts.map((line) => (
-                        <p key={line}>{line}</p>
-                      ))}
+                      <div className="flex flex-wrap justify-center gap-x-10 gap-y-2 text-[#2d5a27]/70 text-base tracking-widest font-normal">
+                        {INVITATION.rsvpContacts.map((line) => (
+                          <p key={line}>{line}</p>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <p className="text-sm md:text-base tracking-[0.5em] text-[#2d5a27]/50 font-bold pt-12">
-                    © 2026 {INVITATION.couple.bride} සහ {INVITATION.couple.groom}
+                    © 2026 {INVITATION.couple.first} සහ {INVITATION.couple.second}
+                  </p>
+                  <p className="text-[#2d5a27]/60 text-xs mt-2 font-sans tracking-wider">
+                    Want a beautiful wedding website like this? Create yours with{" "}
+                    <a
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[#3f7a39] font-bold hover:text-[#1b4332] underline underline-offset-2"
+                      href="https://wa.me/94707819074"
+                    >
+                      invitemint
+                    </a>
                   </p>
                 </motion.div>
               </div>
