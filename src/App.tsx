@@ -631,17 +631,17 @@ export default function WeddingInvitation() {
 
                   <div className="text-[#2d5a27] space-y-6 max-w-3xl mx-auto leading-relaxed text-base md:text-lg">
                     <p className="text-slate-700">
-                      {INVITATION.parents[0]} මහතාගේ සහ මැතිණියගේ ආදරණීය දියණිය
-                    </p>
-                    <h3 className="text-3xl md:text-4xl font-bold text-[#3f7a39] my-2">
-                      {INVITATION.couple.second}
-                    </h3>
-
-                    <p className="text-slate-700">
                       {INVITATION.parents[1]} මහතාගේ සහ මැතිණියගේ ආදරණීය පුතණුවන්
                     </p>
                     <h3 className="text-3xl md:text-4xl font-bold text-[#3f7a39] my-2">
                       {INVITATION.couple.first}
+                    </h3>
+
+                    <p className="text-slate-700">
+                      {INVITATION.parents[0]} මහතාගේ සහ මැතිණියගේ ආදරණීය දියණිය
+                    </p>
+                    <h3 className="text-3xl md:text-4xl font-bold text-[#3f7a39] my-2">
+                      {INVITATION.couple.second}
                     </h3>
 
                     <p className="text-slate-700 max-w-2xl mx-auto pt-2">
