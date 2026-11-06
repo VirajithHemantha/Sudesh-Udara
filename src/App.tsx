@@ -631,14 +631,14 @@ export default function WeddingInvitation() {
 
                   <div className="text-[#2d5a27] space-y-6 max-w-3xl mx-auto leading-relaxed text-base md:text-lg">
                     <p className="text-slate-700">
-                      {INVITATION.parents[1]} මහතාගේ සහ මැතිණියගේ ආදරණීය පුතණුවන්
+                      {INVITATION.parents[0]} මහතාගේ සහ මැතිණියගේ ආදරණීය පුතණුවන්
                     </p>
                     <h3 className="text-3xl md:text-4xl font-bold text-[#3f7a39] my-2">
                       {INVITATION.couple.first}
                     </h3>
 
                     <p className="text-slate-700">
-                      {INVITATION.parents[0]} මහතාගේ සහ මැතිණියගේ ආදරණීය දියණිය
+                      {INVITATION.parents[1]} මහතාගේ සහ මැතිණියගේ ආදරණීය දියණිය
                     </p>
                     <h3 className="text-3xl md:text-4xl font-bold text-[#3f7a39] my-2">
                       {INVITATION.couple.second}
@@ -652,8 +652,11 @@ export default function WeddingInvitation() {
                       {INVITATION.venue.nameSi} හිදී පැවැත්වෙන ප්‍රිය සම්භාෂණයට සහභාගි වන මෙන්
                     </p>
 
-                    <p className="text-slate-700 font-bold">
-                      {guestName ? `${guestName} ` : ""}ඔබට ගෞරවයෙන් ආරාධනා කරමු.
+                    <p className="text-[#2d5a27] font-bold">
+                      {guestName && (
+                        <span className="text-lg md:text-xl">{guestName} </span>
+                      )}
+                      ඔබට ගෞරවයෙන් ආරාධනා කරමු.
                     </p>
 
                     <p className="text-slate-600 text-sm md:text-base">
